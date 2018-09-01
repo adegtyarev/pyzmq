@@ -61,7 +61,7 @@ class ProxyBase(object):
             mons.setsockopt(opt, value)
         
         for iface in self._mon_binds:
-            mons.bind(iface)
+            self._bind(mons, iface)
         
         for iface in self._mon_connects:
             mons.connect(iface)

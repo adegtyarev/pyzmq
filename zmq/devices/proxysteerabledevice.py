@@ -63,7 +63,7 @@ class ProxySteerableBase(object):
             ctrls.setsockopt(opt, value)
 
         for iface in self._ctrl_binds:
-            ctrls.bind(iface)
+            self._bind(ctrls, iface)
 
         for iface in self._ctrl_connects:
             ctrls.connect(iface)

@@ -103,6 +103,18 @@ class TestDevice(BaseZMQTestCase):
             if port < min or port > max:
                 self.fail('Unexpected port number: %i' % port)
 
+    def test_device_bind_eaddrinuse(self):
+        dev = devices.ThreadDevice(zmq.PULL, zmq.PUSH, -1)
+        iface = 'tcp://127.0.0.1'
+        port = dev.bind_in_to_random_port(iface)
+        dev.bind_out('%s:%i' % (iface, port))
+        self.assertRaisesErrno(zmq.EADDRINUSE, dev.run)
+
+    def test_device_bind_einval(self):
+        dev = devices.ThreadDevice(zmq.PULL, zmq.PUSH, -1)
+        dev.bind_in('invalid:*')
+        self.assertRaisesErrno(zmq.EINVAL, dev.run)
+
     def test_device_bind_to_random_binderror(self):
         dev = devices.ThreadDevice(zmq.PULL, zmq.PUSH, -1)
         iface = 'tcp://127.0.0.1'

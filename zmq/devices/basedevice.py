@@ -8,7 +8,7 @@ import time
 from threading import Thread
 from multiprocessing import Process
 
-from zmq import device, QUEUE, REQ, Context, ETERM, ZMQBindError, ZMQError
+from zmq import device, QUEUE, REQ, Context, EADDRINUSE, ETERM, ZMQBindError, ZMQError
 
 
 class Device:
@@ -172,6 +172,23 @@ class Device:
 
         return port
 
+    def _bind(self, socket, iface):
+        """Repeat socket.bind(iface) if EADDRINUSE
+        """
+        for i in range(3):
+            try:
+                time.sleep(.01 * i * 1e1 ** i)
+                socket.bind(iface)
+            except ZMQError as e:
+                if e.errno == EADDRINUSE:
+                    continue
+                else:
+                    raise
+            else:
+                return
+
+        raise ZMQError(EADDRINUSE)
+
     def _setup_sockets(self):
         ctx = self.context_factory()
         
@@ -191,9 +208,9 @@ class Device:
             outs.setsockopt(opt, value)
         
         for iface in self._in_binds:
-            ins.bind(iface)
+            self._bind(ins, iface)
         for iface in self._out_binds:
-            outs.bind(iface)
+            self._bind(outs, iface)
         
         for iface in self._in_connects:
             ins.connect(iface)
